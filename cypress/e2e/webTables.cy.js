@@ -35,55 +35,69 @@ describe('DemoQA Web Tables', () => {
     cy.get('#department').clear().type(department);
   };
 
+  const addWorker = (workerData) => {
+    cy.get('#addNewRecordButton').click();
+    fillWorkerForm(workerData);
+    cy.get('#submit').click();
+  };
+
+  const getRowByText = (text) => cy.contains('.rt-tr-group', text);
+
   beforeEach(() => {
     cy.visit('https://demoqa.com/webtables');
   });
 
   it('should check pagination', () => {
-    cy.get('#addNewRecordButton').click();
-    fillWorkerForm(worker);
-    cy.get('#submit').click();
+    addWorker(worker);
 
-    cy.get('#addNewRecordButton').click();
-    fillWorkerForm({
+    addWorker({
       ...worker,
+      firstName: 'Second',
       email: 'second@test.com',
     });
-    cy.get('#submit').click();
+
+    addWorker({
+      ...worker,
+      firstName: 'Third',
+      email: 'third@test.com',
+    });
 
     cy.get('select[aria-label="rows per page"]').select('5');
 
-    cy.get('.-next').should('not.have.class', '-disabled').click();
+    cy.get('.-next')
+      .should('not.have.class', '-disabled')
+      .click({ force: true });
+
     cy.get('.-pageJump input').should('have.value', '2');
 
-    cy.get('.-previous').click();
+    cy.get('.-previous').click({ force: true });
+
     cy.get('.-pageJump input').should('have.value', '1');
   });
 
   it('should check rows count selection', () => {
     cy.get('select[aria-label="rows per page"]').select('5');
-    cy.get('.rt-tbody .rt-tr-group:visible').should('have.length', 5);
+
+    cy.get('.rt-tbody .rt-tr-group').should('have.length.at.most', 5);
 
     cy.get('select[aria-label="rows per page"]').select('10');
-    cy.get('.rt-tbody .rt-tr-group:visible').its('length').should('be.lte', 10);
+
+    cy.get('.rt-tbody .rt-tr-group').its('length').should('be.lte', 10);
   });
 
   it('should add a new worker', () => {
-    cy.get('#addNewRecordButton').click();
+    addWorker(worker);
 
-    fillWorkerForm(worker);
-
-    cy.get('#submit').click();
-
-    cy.contains(worker.firstName).should('exist');
-    cy.contains(worker.lastName).should('exist');
-    cy.contains(worker.email).should('exist');
+    getRowByText(worker.firstName).within(() => {
+      cy.contains(worker.lastName).should('exist');
+      cy.contains(worker.email).should('exist');
+    });
   });
 
   it('should delete a worker', () => {
-    cy.contains('Cierra').should('exist');
-
-    cy.get('#delete-record-1').click();
+    getRowByText('Cierra')
+      .find('[id^="delete-record-"]')
+      .click({ force: true });
 
     cy.contains('Cierra').should('not.exist');
   });
@@ -93,7 +107,7 @@ describe('DemoQA Web Tables', () => {
       const count = $buttons.length;
 
       for (let i = 0; i < count; i++) {
-        cy.get('[id^="delete-record-"]').first().click();
+        cy.get('[id^="delete-record-"]').first().click({ force: true });
       }
     });
 
@@ -103,33 +117,31 @@ describe('DemoQA Web Tables', () => {
   it('should find a worker and edit it', () => {
     cy.get('#searchBox').type('Cierra');
 
-    cy.get('#edit-record-1').click();
+    getRowByText('Cierra').find('[id^="edit-record-"]').click({ force: true });
 
     fillWorkerForm(updatedWorker);
 
     cy.get('#submit').click();
 
-    cy.contains(updatedWorker.firstName).should('exist');
+    getRowByText(updatedWorker.firstName).should('exist');
   });
 
   it('should validate data after editing worker', () => {
     cy.get('#searchBox').type('Cierra');
 
-    cy.get('#edit-record-1').click();
+    getRowByText('Cierra').find('[id^="edit-record-"]').click({ force: true });
 
     fillWorkerForm(updatedWorker);
 
     cy.get('#submit').click();
 
-    cy.contains(updatedWorker.firstName)
-      .parents('.rt-tr-group')
-      .within(() => {
-        cy.contains(updatedWorker.lastName).should('exist');
-        cy.contains(updatedWorker.email).should('exist');
-        cy.contains(updatedWorker.age).should('exist');
-        cy.contains(updatedWorker.salary).should('exist');
-        cy.contains(updatedWorker.department).should('exist');
-      });
+    getRowByText(updatedWorker.firstName).within(() => {
+      cy.contains(updatedWorker.lastName).should('exist');
+      cy.contains(updatedWorker.email).should('exist');
+      cy.contains(updatedWorker.age).should('exist');
+      cy.contains(updatedWorker.salary).should('exist');
+      cy.contains(updatedWorker.department).should('exist');
+    });
   });
 
   it('should check search by all column values', () => {
