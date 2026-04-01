@@ -46,7 +46,7 @@ describe('DemoQA Web Tables', () => {
   };
 
   beforeEach(() => {
-    cy.visit('https://demoqa.com/webtables');
+    cy.visit('/webtables');
   });
 
   it('should check pagination', () => {
