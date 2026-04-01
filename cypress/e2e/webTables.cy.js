@@ -41,8 +41,16 @@ describe('DemoQA Web Tables', () => {
     cy.get('#submit').click();
   };
 
-  const getRowByText = (text) => {
-    return cy.contains('.rt-tr-group', text);
+  const getRowByText = (text) => cy.contains('.rt-tr-group', text);
+
+  const deleteAllWorkers = () => {
+    cy.get('body').then(($body) => {
+      if ($body.find('[id^="delete-record-"]').length) {
+        cy.get('[id^="delete-record-"]').first().click({ force: true });
+
+        deleteAllWorkers();
+      }
+    });
   };
 
   beforeEach(() => {
@@ -70,11 +78,11 @@ describe('DemoQA Web Tables', () => {
       .should('not.have.class', '-disabled')
       .click({ force: true });
 
-    cy.get('.-pageJump input').should('have.value', '2');
+    cy.get('.-pageInfo').should('contain', '2');
 
     cy.get('.-previous').click({ force: true });
 
-    cy.get('.-pageJump input').should('have.value', '1');
+    cy.get('.-pageInfo').should('contain', '1');
   });
 
   it('should check rows count selection', () => {
@@ -106,13 +114,7 @@ describe('DemoQA Web Tables', () => {
   });
 
   it('should delete all workers', () => {
-    cy.get('[id^="delete-record-"]').then(($buttons) => {
-      const count = $buttons.length;
-
-      for (let i = 0; i < count; i++) {
-        cy.get('[id^="delete-record-"]').first().click({ force: true });
-      }
-    });
+    deleteAllWorkers();
 
     cy.get('.rt-noData').should('contain', 'No rows found');
   });
