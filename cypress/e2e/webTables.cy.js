@@ -41,7 +41,9 @@ describe('DemoQA Web Tables', () => {
     cy.get('#submit').click();
   };
 
-  const getRowByText = (text) => cy.contains('.rt-tr-group', text);
+  const getRowByText = (text) => {
+    return cy.contains('.rt-tr-group', text);
+  };
 
   beforeEach(() => {
     cy.visit('https://demoqa.com/webtables');
@@ -77,12 +79,10 @@ describe('DemoQA Web Tables', () => {
 
   it('should check rows count selection', () => {
     cy.get('select[aria-label="rows per page"]').select('5');
-
-    cy.get('.rt-tbody .rt-tr-group').should('have.length.at.most', 5);
+    cy.get('.rt-tbody .rt-tr-group').should('have.length', 5);
 
     cy.get('select[aria-label="rows per page"]').select('10');
-
-    cy.get('.rt-tbody .rt-tr-group').its('length').should('be.lte', 10);
+    cy.get('.rt-tbody .rt-tr-group').should('have.length', 10);
   });
 
   it('should add a new worker', () => {
@@ -91,6 +91,9 @@ describe('DemoQA Web Tables', () => {
     getRowByText(worker.firstName).within(() => {
       cy.contains(worker.lastName).should('exist');
       cy.contains(worker.email).should('exist');
+      cy.contains(worker.age).should('exist');
+      cy.contains(worker.salary).should('exist');
+      cy.contains(worker.department).should('exist');
     });
   });
 
@@ -114,19 +117,7 @@ describe('DemoQA Web Tables', () => {
     cy.get('.rt-noData').should('contain', 'No rows found');
   });
 
-  it('should find a worker and edit it', () => {
-    cy.get('#searchBox').type('Cierra');
-
-    getRowByText('Cierra').find('[id^="edit-record-"]').click({ force: true });
-
-    fillWorkerForm(updatedWorker);
-
-    cy.get('#submit').click();
-
-    getRowByText(updatedWorker.firstName).should('exist');
-  });
-
-  it('should validate data after editing worker', () => {
+  it('should find a worker, edit it and validate updated data', () => {
     cy.get('#searchBox').type('Cierra');
 
     getRowByText('Cierra').find('[id^="edit-record-"]').click({ force: true });
